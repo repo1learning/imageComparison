@@ -198,7 +198,7 @@ public class Comp {
 		}
 		return outImg;
 	}
-
+//...............................
 	public static void main(String[] args) throws InterruptedException {
 	 
 		WebDriver driver = initDriver();
