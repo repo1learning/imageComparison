@@ -15,18 +15,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Properties;
-
 import javax.imageio.ImageIO;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
 public class Comp {
@@ -86,15 +81,16 @@ public class Comp {
 		return keyValues.get(Key);
 	}
 
-	public static void writeToExcel(String sheetName, String result, String location, String expectedImageLocation,
-			String actualImageLocation, float compareImagePercentage) {
+	public static void writeToExcel(String sheetName, String testCaseId, String result, String location,
+			String expectedImageLocation, String actualImageLocation, float compareImagePercentage) {
 		HSSFSheet sheetTowrite = getExcelSheet(sheetName);
 		sheetTowrite.createRow(sheetTowrite.getLastRowNum() + 1);
-		sheetTowrite.getRow(sheetTowrite.getLastRowNum()).createCell(2).setCellValue(result);
-		sheetTowrite.getRow(sheetTowrite.getLastRowNum()).createCell(3).setCellValue(location);
+		sheetTowrite.getRow(sheetTowrite.getLastRowNum()).createCell(0).setCellValue(testCaseId);
+		sheetTowrite.getRow(sheetTowrite.getLastRowNum()).createCell(1).setCellValue(result);
+		sheetTowrite.getRow(sheetTowrite.getLastRowNum()).createCell(2).setCellValue(location);
+		sheetTowrite.getRow(sheetTowrite.getLastRowNum()).createCell(3).setCellValue(actualImageLocation);
 		sheetTowrite.getRow(sheetTowrite.getLastRowNum()).createCell(4).setCellValue(expectedImageLocation);
-		sheetTowrite.getRow(sheetTowrite.getLastRowNum()).createCell(5).setCellValue(actualImageLocation);
-		sheetTowrite.getRow(sheetTowrite.getLastRowNum()).createCell(6).setCellValue(compareImagePercentage);
+		sheetTowrite.getRow(sheetTowrite.getLastRowNum()).createCell(5).setCellValue(compareImagePercentage);
 
 		try {
 			FileOutputStream fileOut = new FileOutputStream(getValueFromPropertyFile("ExcelPath"));
@@ -111,10 +107,16 @@ public class Comp {
 		return dateFormat.format(date);
 	}
 
-	public static void takeScreenShot(WebDriver driver, String name) {
-		File scrFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+	public static void takeScreenShot(ChromeDriverEx driver, String name) {
+		File file = null;
 		try {
-			FileUtils.copyFile(scrFile, new File(name));
+			file = driver.getFullScreenshotAs(OutputType.FILE);
+		} catch (Exception e1) {
+
+			e1.printStackTrace();
+		}
+		try {
+			FileUtils.copyFile(file, new File(name));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -133,20 +135,16 @@ public class Comp {
 			DataBuffer dbB = biB.getData().getDataBuffer();
 			int sizeB = dbB.getSize();
 			if (sizeA == sizeB) {
-
 				for (int i = 0; i < sizeA; i++) {
-
 					if (dbA.getElem(i) == dbB.getElem(i)) {
 						count = count + 1;
 					}
-
 				}
 				percentage = (count * 100) / sizeA;
-				System.out.println("percentage------------ " + percentage + "aaaaaaaaaaaaaaaa" + count);
+				
 			}
 			if (sizeA == sizeB) {
 				for (int i = 0; i < sizeA; i++) {
-
 					if (dbA.getElem(i) != dbB.getElem(i)) {
 						return false;
 					}
@@ -161,12 +159,21 @@ public class Comp {
 		}
 	}
 
-	public static WebDriver initDriver() {
+	public static ChromeDriverEx initDriver() {
 		System.setProperty("webdriver.chrome.driver",
 				"C:\\Users\\amol.sharma\\Downloads\\chromedriver_win32\\chromedriver.exe");
 		ChromeOptions options = new ChromeOptions();
-		options.addArguments("start-maximized");
-		WebDriver driver = new ChromeDriver(options);
+		options.setExperimentalOption("useAutomationExtension", false);
+		options.addArguments("disable-infobars");
+		options.addArguments("headless");
+		ChromeDriverEx driver = null;
+		try {
+			driver = new ChromeDriverEx(options);
+
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		}
 		return driver;
 	}
 
@@ -177,6 +184,7 @@ public class Comp {
 		BufferedImage outImg = new BufferedImage(width1, height1, BufferedImage.TYPE_INT_RGB);
 		int diff;
 		int result;
+
 		for (int i = 0; i < height1; i++) {
 			for (int j = 0; j < width1; j++) {
 
@@ -198,38 +206,68 @@ public class Comp {
 		}
 		return outImg;
 	}
-//...............................
-	public static void main(String[] args) throws InterruptedException {
-	 
-		WebDriver driver = initDriver();
-		driver.get("https://google.com");
-		actualImage = "d:\\tmp\\" + "actualImage" + getTimeStamp() + "screenshot.png";
-		expectedImage = "d:\\tmp\\" + "expectedImage" + getTimeStamp() + "screenshot.png";
-		takeScreenShot(driver, actualImage);
-		Thread.sleep(10000);
-		takeScreenShot(driver, expectedImage);
-		OutcomeResult = compareImage(actualImage, expectedImage);
-		System.out.println("outcome result is ---- " + OutcomeResult);
-		String result;
-		if (OutcomeResult.equals(true)) {
-			result = "Pass";
-		} else {
-			result = "fail";
-		}
-		if (result.equals("fail")) {
-			try {
-				String OutputLocation = "d:\\tmp\\000" +  LocalDateTime.now().getNano() + "screenshot.png";
-				ImageIO.write(highlightDifference(), "png", new File(OutputLocation));
-				System.out.println(actualImage);
-				System.out.println(OutputLocation);
-				writeToExcel("Url Sheet", result, OutputLocation, expectedImage, actualImage, percentage);
-			} catch (IOException e) {
 
-				e.printStackTrace();
+	public static String getTestCaseNumber(int i) {
+		String url = getExcelSheet("Url Sheet").getRow(i).getCell(0).getStringCellValue();
+		return url;
+	}
+
+	public static String getBaseUrl(int i) {
+		String url = getExcelSheet("Url Sheet").getRow(i).getCell(1).getStringCellValue();
+		return url;
+	}
+
+	public static String getMigratedUrl(int i) {
+		String url = getExcelSheet("Url Sheet").getRow(i).getCell(2).getStringCellValue();
+		return url;
+	}
+
+	public static void main(String[] args) throws InterruptedException {
+
+		for (int i = 1; i <= getExcelSheet(getValueFromPropertyFile("inputExcelSheet")).getLastRowNum(); i++) {
+			ChromeDriverEx driver = initDriver();
+			driver.get(getBaseUrl(i));
+
+			actualImage = "d:\\tmp\\Testcase" + getTestCaseNumber(i) + "\\BaseImage" + getTimeStamp()
+					+ "screenshot.png";
+			expectedImage = "d:\\tmp\\Testcase" + getTestCaseNumber(i) + "\\MigratedImage" + getTimeStamp()
+					+ "screenshot.png";
+
+			takeScreenShot(driver, actualImage);
+
+			driver.get(getMigratedUrl(i));
+			takeScreenShot(driver, expectedImage);
+			OutcomeResult = compareImage(actualImage, expectedImage);
+			System.out.println("outcome result is ---- " + OutcomeResult);
+			String result;
+			System.out.println(percentage);
+			if (OutcomeResult.equals(true)) {
+				result = "Pass";
+			} else {
+				result = "fail";
 			}
-		} else {
-			writeToExcel("Url Sheet", result, "NA", expectedImage, actualImage, percentage);
-		}	 
-		driver.close();		 
+			if (result.equals("fail")) {
+				try {
+					String OutputLocation = "d:\\tmp\\Testcase" + getTestCaseNumber(i) + "\\Output"
+							+ LocalDateTime.now().getNano() + "screenshot.png";
+
+					ImageIO.write(highlightDifference(), "png", new File(OutputLocation));
+					System.out.println(actualImage);
+					System.out.println(OutputLocation);
+					writeToExcel(getValueFromPropertyFile("outpuExcelSheet"), getTestCaseNumber(i), result,
+							OutputLocation, expectedImage, actualImage, percentage);
+				} catch (IOException e) {
+
+					e.printStackTrace();
+				}
+			} else {
+				writeToExcel(getValueFromPropertyFile("outpuExcelSheet"), getTestCaseNumber(i), result, "NA",
+						expectedImage, actualImage, percentage);
+			}
+			percentage=0;
+			System.out.println("closing");
+			driver.close();
+		}
+
 	}
 }
