@@ -31,10 +31,11 @@ public class Comp {
 	static Boolean OutcomeResult;
 	static Workbook workbook = null;
 	static float percentage = 0;
-
+	private static String excelSheetPath =System.getProperty("user.home") + "/Desktop/ImageComparisonUtility/Data.xls";
+	
 	public static HSSFSheet getExcelSheet(String sheetName) {
 		try {
-			FileInputStream inputStream = new FileInputStream(new File(getValueFromPropertyFile("ExcelPath")));
+			FileInputStream inputStream = new FileInputStream(new File(excelSheetPath));
 			workbook = new HSSFWorkbook(inputStream);
 			HSSFSheet sheet = (HSSFSheet) workbook.getSheet(sheetName);
 
@@ -141,7 +142,7 @@ public class Comp {
 					}
 				}
 				percentage = (count * 100) / sizeA;
-				
+
 			}
 			if (sizeA == sizeB) {
 				for (int i = 0; i < sizeA; i++) {
@@ -161,11 +162,13 @@ public class Comp {
 
 	public static ChromeDriverEx initDriver() {
 		System.setProperty("webdriver.chrome.driver",
-				"C:\\Users\\amol.sharma\\Downloads\\chromedriver_win32\\chromedriver.exe");
+				System.getProperty("user.home") + "/Desktop/ImageComparisonUtility/Drivers/chromedriver.exe");
+		
 		ChromeOptions options = new ChromeOptions();
+		options.addArguments("start-maximized");
 		options.setExperimentalOption("useAutomationExtension", false);
 		options.addArguments("disable-infobars");
-		options.addArguments("headless");
+		
 		ChromeDriverEx driver = null;
 		try {
 			driver = new ChromeDriverEx(options);
@@ -185,9 +188,11 @@ public class Comp {
 		int diff;
 		int result;
 
-		for (int i = 0; i < height1; i++) {
-			for (int j = 0; j < width1; j++) {
+		try{
+			for (int i = 0; i < height1 - 1; i++) {
 
+			for (int j = 0; j < width1; j++) {
+	
 				int rgb1 = biA.getRGB(j, i);
 				int rgb2 = biB.getRGB(j, i);
 				int r1 = (rgb1 >> 16) & 0xff;
@@ -201,8 +206,13 @@ public class Comp {
 				diff += Math.abs(b1 - b2);
 				diff /= 3;
 				result = (diff << 16) | (diff << 8) | diff;
+		
 				outImg.setRGB(j, i, result);
-			}
+		}
+		}
+			}catch(ArrayIndexOutOfBoundsException e){
+			e.getMessage();
+		
 		}
 		return outImg;
 	}
@@ -223,14 +233,14 @@ public class Comp {
 	}
 
 	public static void main(String[] args) throws InterruptedException {
-
+		ChromeDriverEx driver = initDriver();
 		for (int i = 1; i <= getExcelSheet(getValueFromPropertyFile("inputExcelSheet")).getLastRowNum(); i++) {
-			ChromeDriverEx driver = initDriver();
+			 
 			driver.get(getBaseUrl(i));
 
-			actualImage = "d:\\tmp\\Testcase" + getTestCaseNumber(i) + "\\BaseImage" + getTimeStamp()
+			actualImage = System.getProperty("user.home") + "/Desktop/ImageComparisonUtility/Output/TestCase"+ getTestCaseNumber(i) + "/BaseImage" + getTimeStamp()
 					+ "screenshot.png";
-			expectedImage = "d:\\tmp\\Testcase" + getTestCaseNumber(i) + "\\MigratedImage" + getTimeStamp()
+			expectedImage =System.getProperty("user.home") + "/Desktop/ImageComparisonUtility/Output/TestCase"+ getTestCaseNumber(i) + "/MigratedImage" + getTimeStamp()
 					+ "screenshot.png";
 
 			takeScreenShot(driver, actualImage);
@@ -248,7 +258,7 @@ public class Comp {
 			}
 			if (result.equals("fail")) {
 				try {
-					String OutputLocation = "d:\\tmp\\Testcase" + getTestCaseNumber(i) + "\\Output"
+					String OutputLocation = System.getProperty("user.home") + "/Desktop/ImageComparisonUtility/Output/TestCase"+  getTestCaseNumber(i) + "/Output"
 							+ LocalDateTime.now().getNano() + "screenshot.png";
 
 					ImageIO.write(highlightDifference(), "png", new File(OutputLocation));
@@ -264,10 +274,11 @@ public class Comp {
 				writeToExcel(getValueFromPropertyFile("outpuExcelSheet"), getTestCaseNumber(i), result, "NA",
 						expectedImage, actualImage, percentage);
 			}
-			percentage=0;
+			percentage = 0;
 			System.out.println("closing");
-			driver.close();
+			
+			
 		}
-
+		driver.quit();
 	}
 }
