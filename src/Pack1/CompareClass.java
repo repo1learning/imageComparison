@@ -24,7 +24,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.chrome.ChromeOptions;
 
-public class Comp {
+public class CompareClass {
 	static BufferedImage biA;
 	static BufferedImage biB;
 	static String actualImage, expectedImage;
