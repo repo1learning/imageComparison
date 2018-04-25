@@ -22,7 +22,9 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
 
 public class CompareClass {
 	static BufferedImage biA;
@@ -94,7 +96,7 @@ public class CompareClass {
 		sheetTowrite.getRow(sheetTowrite.getLastRowNum()).createCell(5).setCellValue(compareImagePercentage);
 
 		try {
-			FileOutputStream fileOut = new FileOutputStream(getValueFromPropertyFile("ExcelPath"));
+			FileOutputStream fileOut = new FileOutputStream(excelSheetPath);
 			workbook.write(fileOut);
 			fileOut.close();
 		} catch (Exception e) {
@@ -168,13 +170,10 @@ public class CompareClass {
 		options.addArguments("start-maximized");
 		options.setExperimentalOption("useAutomationExtension", false);
 		options.addArguments("disable-infobars");
-		
 		ChromeDriverEx driver = null;
 		try {
 			driver = new ChromeDriverEx(options);
-
 		} catch (Exception e) {
-
 			e.printStackTrace();
 		}
 		return driver;
@@ -233,7 +232,14 @@ public class CompareClass {
 	}
 
 	public static void main(String[] args) throws InterruptedException {
-		ChromeDriverEx driver = initDriver();
+		
+		if(readFromExcel(getExcelSheet("Browser").getSheetName(), "Browser").equalsIgnoreCase("Chrome")){
+			ChromeDriverEx driver = initDriver();
+		}else if (readFromExcel(getExcelSheet("Browser").getSheetName(), "Browser").equalsIgnoreCase("Firefox")) {
+			WebDriver driver = new FirefoxDriver();
+		
+		}
+			
 		for (int i = 1; i <= getExcelSheet(getValueFromPropertyFile("inputExcelSheet")).getLastRowNum(); i++) {
 			 
 			driver.get(getBaseUrl(i));
@@ -248,7 +254,6 @@ public class CompareClass {
 			driver.get(getMigratedUrl(i));
 			takeScreenShot(driver, expectedImage);
 			OutcomeResult = compareImage(actualImage, expectedImage);
-			System.out.println("outcome result is ---- " + OutcomeResult);
 			String result;
 			System.out.println(percentage);
 			if (OutcomeResult.equals(true)) {
@@ -276,7 +281,6 @@ public class CompareClass {
 			}
 			percentage = 0;
 			System.out.println("closing");
-			
 			
 		}
 		driver.quit();
