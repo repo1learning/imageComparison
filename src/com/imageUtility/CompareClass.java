@@ -156,7 +156,7 @@ public class CompareClass {
 		}
 	}
 
-	public static WebDriver initDriver() {
+	public static WebDriver initializeDriver() {
 		if (readFromExcel("Browser", "Browser").equalsIgnoreCase("Chrome")) {
 			System.setProperty("webdriver.chrome.driver",
 					System.getProperty("user.home") + "/Desktop/ImageComparisonUtility/Drivers/chromedriver.exe");
@@ -179,7 +179,14 @@ public class CompareClass {
 			driver = new FirefoxDriver();
 			return driver;
 		} else {
-			
+			System.setProperty("webdriver.ie.driver", System.getProperty("user.home") + "/Desktop/ImageComparisonUtility/Drivers/IEDriverServer.exe");
+			DesiredCapabilities caps = DesiredCapabilities.internetExplorer();
+			  caps.setCapability("EnableNativeEvents", false);
+			  caps.setCapability(InternetExplorerDriver.INTRODUCE_FLAKINESS_BY_IGNORING_SECURITY_DOMAINS, true);
+			  
+			  caps.setCapability("ignoreZoomSetting", true);
+			  driver = new InternetExplorerDriver(caps);
+			  driver.manage().window().maximize();
 			return driver;
 		}
 		return null;
@@ -238,7 +245,7 @@ public class CompareClass {
 
 	public static void main(String[] args) throws InterruptedException {
 
-		WebDriver driver = initDriver();
+		WebDriver driver = initializeDriver();
 
 		for (int i = 1; i <= getExcelSheet("Url Sheet").getLastRowNum(); i++) {
 			driver.get(getBaseUrl(i));
