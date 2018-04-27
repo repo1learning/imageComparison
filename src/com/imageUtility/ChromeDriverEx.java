@@ -1,17 +1,12 @@
-package Pack1;
+package com.imageUtility;
 
-import java.io.File;
 import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.openqa.selenium.OutputType;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxBinary;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.remote.CommandInfo;
 import org.openqa.selenium.remote.HttpCommandExecutor;
 import org.openqa.selenium.remote.http.HttpMethod;
@@ -59,23 +54,5 @@ public class ChromeDriverEx extends ChromeDriver {
 		Object result = ((Map<String, ?>) response).get("result");
 		return ((Map<String, ?>) result).get("value");
 	}
-
-	public static void main(String[] args) {
-//		File file = null;
-//		try {
-//			System.setProperty("webdriver.chrome.driver",
-//					"C:\\Users\\amol.sharma\\Downloads\\chromedriver_win32\\chromedriver.exe");
-//			ChromeDriverEx dr = new ChromeDriverEx();
-//			 
-//			dr.get("https://epicorcs.service-now.com/epiccare/");
-//			Thread.sleep(3000);
-//			file = dr.getFullScreenshotAs(OutputType.FILE);
-//			FileUtils.copyFile(file, new File(System.getProperty("user.home") + "/Desktop/ss.png"));
-//
-//		} catch (Exception e) {
-//			e.printStackTrace();}
-//		 
 	
-		
-	}
 }
